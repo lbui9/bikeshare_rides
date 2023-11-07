@@ -1,0 +1,318 @@
+---
+title: "Assignment 4: Capital Bikeshare"
+author: "Linh Bui"
+date: "`r Sys.Date()`"
+documentclass: article
+geometry: margin=1in
+fontsize: 11pt
+output:
+  pdf_document:
+    toc: false
+    df_print: kable
+    fig_caption: false
+    number_sections: false
+    dev: pdf
+    highlight: tango
+  html_document:
+    theme: default
+    self_contained: true
+    toc: false
+    df_print: kable
+    fig_caption: false
+    number_sections: false
+    smart: true
+    dev: svg
+---
+
+```{r setup, include = FALSE, echo=FALSE}
+# DO NOT ALTER THIS CHUNK
+knitr::opts_chunk$set(
+  echo = TRUE,
+  eval = TRUE,
+  fig.width = 5,
+  fig.asp = 0.618,
+  dpi = 120,
+  fig.align = "center",
+  cache = FALSE
+)
+# Load required packages
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(lubridate))
+suppressPackageStartupMessages(library(geosphere))
+bikeshare <- readRDS("bikeshare_data.RDS")
+```
+
+
+## Exercise 1
+
+i. Two continuous variables in this dataset: started_at & ended_at.
+
+ii. Two categorical variables in this dataset: rideable_type & member_casual.
+
+iii. Each row in the dataset represents an individual bicycle trip.
+
+## Exercise 2
+
+```{r}
+bikeshare <- bikeshare %>%
+  mutate(
+    duration = ended_at - started_at
+  )
+```
+
+## Exercise 3
+
+i. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = duration)) +
+  labs(title = "Distribution of Capital Bikeshare's ride lengths", 
+       x = "Capital Bikeshare's ride lengths"
+       )
+```
+
+* This histogram is unimodal and right-skewed. It has only 1 mode. 
+
+ii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_boxplot(mapping = aes(x = duration)) +
+  labs(title = "Distribution of Capital Bikeshare's ride lengths", 
+       x = "Capital Bikeshare's ride lengths"
+       )
+```
+
+* In this graph, data is centered around 1000 and the distribution is right-skewed. Outliers can be seen here more clearly than in the histogram.
+
+iii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = duration, y = '')) +
+  labs(title = "Distribution of Capital Bikeshare's ride lengths", 
+       x = "Capital Bikeshare's ride lengths"
+       )
+```
+
+* This violin plot has the same shape as the histogram. It is unimodal and right-skewed. It is centered around 1000.
+
+## Exercise 4
+
+```{r}
+bikeshare <- bikeshare %>%
+  mutate(
+    min_distance = distHaversine(
+      cbind(start_lng, start_lat), 
+      cbind(end_lng, end_lat)
+    )
+  )
+```
+
+## Exercise 5
+
+i. Histogram
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = min_distance)) +
+  labs(title = "Distribution of Capital Bikeshare's minimum ride distance",
+       x = "Capital Bikeshare's minimum ride distance"
+       )
+```
+
+* This histogram is unimodal and right-skewed. It is centered around 2000.
+
+ii. Box plot 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_boxplot(mapping = aes(x = min_distance)) +
+  labs(title = "Distribution of Capital Bikeshare's minimum ride distance",
+       x = "Capital Bikeshare's minimum ride distance"
+       )
+```
+
+* In this graph, data is also centered around 2000. However, outliers can be seen more clearly here than in the other two plots. 
+
+iii. Violin plot
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = min_distance, y = '')) +
+  labs(title = "Distribution of Capital Bikeshare's minimum ride distance",
+       x = "Capital Bikeshare's minimum ride distance"
+       )
+```
+
+* This violin plot has quite the same shape as the histogram. It is also right-skewed. However, it seems like there are 2 modes in this graph. It is centered around 2000.
+
+## Exercise 6
+
+i. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_point(mapping = aes(x = duration, y = min_distance)) +
+  labs(
+    title = "Covariation between ride lengths and distance",
+    x = "Ride lengths",
+    y = "Ride distance"
+  )
+```
+
+ii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_point(mapping = aes(x = duration, y = min_distance, alpha = 0.01)) +
+  labs(
+    title = "Covariation between ride lengths and distance",
+    x = "Ride lengths",
+    y = "Ride distance"
+  )
+```
+
+iii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_bin2d(mapping = aes(x = duration, y = min_distance)) +
+  labs(
+    title = "Covariation between ride lengths and distance",
+    x = "Ride lengths",
+    y = "Ride distance"
+  )
+```
+
+iv. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_bin2d(mapping = aes(x = duration, y = min_distance)) +
+  labs(
+    title = "Covariation between ride lengths and distance",
+    x = "Ride lengths",
+    y = "Ride distance") +
+  scale_fill_viridis_c(trans = "log")
+```
+
+
+## Exercise 7
+
+i. 
+
+```{r}
+bikeshare %>%
+  summarize(
+      mean = mean(duration),
+      median = median(duration),
+      standard_deviation = sd(duration),
+      minimum = min(duration), 
+      maximum = max(duration)
+  )
+```
+
+* The mean bike ride longer than the median because there are a lot more number of people who have a short ride than number of people who ride a long ride. Since the median falls in the middle of the dataset, it falls at the low value (short ride). Meanwhile, mean is the sum of ride lengths divided by ride counts. 
+
+ii. 
+
+```{r}
+bikeshare %>%
+  group_by(member_casual) %>%
+  summarize(
+      mean = mean(duration),
+      median = median(duration),
+      standard_deviation = sd(duration),
+      minimum = min(duration), 
+      maximum = max(duration)
+  )
+```
+
+* Casual riders has the longest average ride length.
+
+* This is not what I expected because I thought that members would be more likely to have long rides since members tend to have discounts and privileges. 
+
+iii. 
+
+```{r}
+bikeshare %>%
+  group_by(member_casual) %>%
+  summarize(
+    n = n()
+  )
+```
+
+* Member riders have the most rides. 
+
+## Exercise 8
+
+i. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_histogram(mapping = aes(x = duration, fill = member_casual),
+    bins = 20, 
+    alpha = 0.3, 
+    position = "identity") +
+  labs(title = "Distribution of Capital Bikeshare's ride lengths based on rider types", 
+       x = "Capital Bikeshare's ride lengths"
+       )
+```
+
+* It can be seen from the graph that both type of riders mostly have short rides. However, while the majority of Capital Bikeshare's members ride in short periods of time, casual riders' ride lengths are more diverse and they have much longer ride lengths than member riders do. 
+
+ii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_violin(mapping = aes(x = duration, y = member_casual)) +
+  labs(title = "Distribution of Capital Bikeshare's ride lengths based on rider types", 
+       x = "Capital Bikeshare's ride lengths", 
+       y = "Capital Bikeshare's ride distance")
+```
+
+iii. 
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_bin2d(mapping = aes(x = duration, y = min_distance)) +
+  labs(
+    title = "Covariation between ride lengths and distance based on rider types",
+    x = "Ride lengths",
+    y = "Ride distance") +
+  scale_fill_viridis_c(trans = "log")+ 
+  facet_wrap( ~ member_casual)
+```
+
+* Members tend to have more rides with longer duration but low minimum distance rides. Meanwhile, casual riders tend to ride further for longer periods of time. This is understandable because casual riders have less motivation to pay for short rides. 
+
+## Exercise 9
+
+```{r}
+bikeshare %>%
+  ggplot() +
+  geom_bin2d(mapping = aes(x = duration, y = min_distance)) +
+  labs(
+    title = "Covariation between ride lengths and distance based on transportation types",
+    x = "Ride lengths",
+    y = "Ride distance") +
+  scale_fill_viridis_c(trans = "log")+ 
+  facet_wrap( ~ rideable_type)
+```
+
+* We can see from the graph that docked bikes are used for short distance rides more than classic bikes and electric bikes are. Among three types, riders using electric bikes tend to have longest ride distance and shortest ride lengths. Also, classic bike rider is the largest group among three. 
